@@ -24,7 +24,7 @@ tests to add the version of the software the tests are running against.
 
 ## Kudos
 
-This plugin implementation is inspired by [carspring's stackoverflow answer](http://stackoverflow.com/questions/6545710/programatically-pin-a-build-in-teamcity).
+This plugin implementation is inspired by [carlspring's stackoverflow answer](http://stackoverflow.com/questions/6545710/programatically-pin-a-build-in-teamcity).
 
 ## How to build
 
