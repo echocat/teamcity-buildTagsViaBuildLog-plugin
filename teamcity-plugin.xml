@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamcity-plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:shemas-jetbrains-com:teamcity-plugin-v1-xml">
+  <info>
+    <name>buildTagsViaBuildLog</name>
+    <display-name>Build tags via build log</display-name>
+    <version>0.1</version>
+    <description>Adds the ability to programatically add build tags via build log messages</description>
+    <download-url>https://github.com/tmuehl</download-url>
+    <vendor>
+      <name>Tobias Muehl</name>
+      <url>https://github.com/tmuehl</url>
+    </vendor>
+  </info>
+  <deployment use-separate-classloader="true" />
+</teamcity-plugin>
