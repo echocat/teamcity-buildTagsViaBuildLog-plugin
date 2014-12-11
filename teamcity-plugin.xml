@@ -3,7 +3,7 @@
   <info>
     <name>buildTagsViaBuildLog</name>
     <display-name>Build tags via build log</display-name>
-    <version>0.1</version>
+    <version>1.1</version>
     <description>Adds the ability to programatically add build tags via build log messages</description>
     <download-url>https://github.com/tmuehl</download-url>
     <vendor>
