@@ -36,7 +36,7 @@ import java.util.*;
 import static org.mockito.Mockito.mock;
 
 public class RunningBuildStub implements SRunningBuild {
-    private List<String> tags = new ArrayList<String>();
+    private List<String> tags = new ArrayList<>();
 
     public String getCurrentPath() {
         throw new NotImplementedException();
@@ -419,23 +419,23 @@ public class RunningBuildStub implements SRunningBuild {
     }
 
     public void addBuildMessages(@NotNull List<BuildMessage1> list) {
-
+        throw new NotImplementedException();
     }
 
     public void addBuildMessage(@NotNull BuildMessage1 buildMessage1) {
-
+        throw new NotImplementedException();
     }
 
     public void setBuildNumber(@NotNull String s) {
-
+        throw new NotImplementedException();
     }
 
     public void setBuildStatus(Status status) {
-
+        throw new NotImplementedException();
     }
 
     public void setInterrupted(@NotNull RunningBuildState runningBuildState, @Nullable User user, @Nullable String s) {
-
+        throw new NotImplementedException();
     }
 
     public String getAgentAccessCode() {
@@ -459,7 +459,7 @@ public class RunningBuildStub implements SRunningBuild {
     }
 
     public void stop(@Nullable User user, @Nullable String s) {
-
+        throw new NotImplementedException();
     }
 
     @NotNull

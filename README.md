@@ -1,10 +1,10 @@
 # Build tags via build log plugin for TeamCity
 
-This plugin is for TeamCity. It adds programatically build tags via the build log.
+This plugin is for TeamCity. It adds programmatically build tags via the build log.
 
 ## How to use
 
-Upload the BuildTagsViaBuildLog.zip into TeamCity. Restart temacity to make it active.
+Upload the BuildTagsViaBuildLog.zip into TeamCity. Restart teamcity to make it active.
 
 To add build tags to your build just write a message of the following format into your build logs:
 

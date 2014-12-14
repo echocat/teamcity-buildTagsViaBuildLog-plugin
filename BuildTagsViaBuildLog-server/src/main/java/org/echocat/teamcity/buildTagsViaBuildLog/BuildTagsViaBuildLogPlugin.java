@@ -8,21 +8,29 @@ import jetbrains.buildServer.serverSide.BuildServerListener;
 import jetbrains.buildServer.serverSide.SRunningBuild;
 import jetbrains.buildServer.util.EventDispatcher;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.lang.Character.isWhitespace;
 
 public class BuildTagsViaBuildLogPlugin extends BuildServerAdapter {
 
-    public static final Pattern BUILTAG_MESSAGE_PATTERN = Pattern.compile("^##teamcity\\[addBuildTag\\s*'([^']*)'\\s*\\]$");
-    public static final Logger SERVER_LOGGER = Loggers.SERVER;
+    private static final Logger SERVER_LOGGER = Loggers.SERVER;
 
-    public BuildTagsViaBuildLogPlugin(@NotNull EventDispatcher<BuildServerListener> serverDispatcher) {
+    private final Map<String, BuildLogMessageHandler> messageHandlers;
+
+    public BuildTagsViaBuildLogPlugin(@NotNull final EventDispatcher<BuildServerListener> serverDispatcher,
+                                      @NotNull final Collection<BuildLogMessageHandler> messageHandlersToRegister) {
+        messageHandlers = createMessageHandlersMap(messageHandlersToRegister);
+
         serverDispatcher.addListener(this);
-        SERVER_LOGGER.debug("BuildTagsViaBuildLogPlugin loaded");
+
+        if (SERVER_LOGGER.isDebugEnabled()) {
+            SERVER_LOGGER.debug("BuildTagsViaBuildLogPlugin loaded");
+        }
     }
 
     @Override
@@ -34,55 +42,57 @@ public class BuildTagsViaBuildLogPlugin extends BuildServerAdapter {
         }
     }
 
-    @SuppressWarnings("MethodWithMultipleReturnPoints")
     private void parseLogMessage(@NotNull SRunningBuild build, @NotNull String text) {
-        if (!isBuildLogTagMessage(text)) {
+        if (!isTeamcityInteractionMessage(text)) {
             return;
         }
 
-        final Matcher matcher = BUILTAG_MESSAGE_PATTERN.matcher(text);
-        if (matcher.matches()) {
-            final String newBuildTag = matcher.group(1);
+        String messageName = extractMessageName(text);
 
-            if (containsAtLeastOneCharacter(newBuildTag)) {
-                addBuildTag(build, newBuildTag);
-            }
-        } else {
-            SERVER_LOGGER.debug("Could not parse addBuildTag message. Build log message is: " + text);
+        BuildLogMessageHandler handler = messageHandlers.get(messageName);
+
+        if (handler != null) {
+            handler.handleMessage(build, text);
         }
     }
 
-    private void addBuildTag(SRunningBuild build, String newBuildTag) {
-        final Set<String> tags = new HashSet<String>(build.getTags());
-        tags.add(newBuildTag);
+    @Nullable
+    private String extractMessageName(@NotNull final String text) {
+        final int textLength = text.length();
 
-        build.setTags(build.getOwner(), new ArrayList<String>(tags));
-    }
-
-    private boolean isBuildLogTagMessage(String text) {
-        return text.startsWith("##teamcity[addBuildTag");
-    }
-
-    private static boolean containsAtLeastOneCharacter(String s) {
-        return !isBlank(s);
-    }
-
-    @SuppressWarnings("MethodWithMultipleReturnPoints")
-    private static boolean isBlank(String s) {
-        /* copied from apache commons String Utils */
-        final int len;
-        if (s == null || (len = s.length()) == 0) {
-            return true;
+        /* skip preceding whitespaces */
+        int indexStart = 11;
+        while (indexStart < textLength && isWhitespace(text.charAt(indexStart))) {
+            ++indexStart;
         }
 
-        for (int i = 0; i < len; ++i) {
-            if (!Character.isWhitespace(s.charAt(i))) {
-                return false;
-            }
+        if (indexStart >= textLength) {
+            return null;
         }
 
-        return true;
+        int indexEnd = indexStart + 1;
+        while (indexEnd < textLength && Character.isLetterOrDigit(text.charAt(indexEnd))) {
+            ++indexEnd;
+        }
+
+        return text.substring(indexStart, indexEnd);
     }
+
+
+    private boolean isTeamcityInteractionMessage(String text) {
+        return text.startsWith("##teamcity[");
+    }
+
+    private static Map<String, BuildLogMessageHandler> createMessageHandlersMap(Collection<BuildLogMessageHandler> messageHandlersToRegister) {
+        Map<String, BuildLogMessageHandler> messageHandlerMap = new HashMap<>(messageHandlersToRegister.size());
+
+        for (BuildLogMessageHandler messageHandler : messageHandlersToRegister) {
+            messageHandlerMap.put(messageHandler.acceptedMessageName(), messageHandler);
+        }
+
+        return messageHandlerMap;
+    }
+
 
 
 }

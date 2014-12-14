@@ -4,4 +4,6 @@
 
     <bean id="buildTagsViaBuildLogPlugin" class="org.echocat.teamcity.buildTagsViaBuildLog.BuildTagsViaBuildLogPlugin"/>
 
+    <bean id="addBuildTagMessageHandler" class="org.echocat.teamcity.buildTagsViaBuildLog.AddBuildTagMessageHandler"/>
+
 </beans>

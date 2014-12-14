@@ -3,42 +3,45 @@ package org.echocat.teamcity.buildTagsViaBuildLog;
 import jetbrains.buildServer.messages.BuildMessage1;
 import jetbrains.buildServer.serverSide.BuildServerListener;
 import jetbrains.buildServer.util.EventDispatcher;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
 public class BuildTagsViaBuildLogPluginTest {
 
-    @Test
-    public void recognizes_valid_patterns_and_ignores_other_messages() {
-        final EventDispatcher<BuildServerListener> eventDispatcher = mock(EventDispatcher.class);
+    private static final EventDispatcher<BuildServerListener> EVENT_DISPATCHER =
+            (EventDispatcher<BuildServerListener>) mock(EventDispatcher.class);
+    private static final String TEXT_MESSAGE = "Text";
 
-        final BuildTagsViaBuildLogPlugin plugin = new BuildTagsViaBuildLogPlugin(eventDispatcher);
+    @Test
+    public void detects_messages_and_passes_the_to_handlers() {
+        RecordingBuildLogMessageHandlerStub messageHandler1 = new RecordingBuildLogMessageHandlerStub("messageName1");
+        RecordingBuildLogMessageHandlerStub messageHandler2 = new RecordingBuildLogMessageHandlerStub("messageName2");
+
+        List<BuildLogMessageHandler> handlersToRegister = new ArrayList<>();
+        handlersToRegister.add(messageHandler1);
+        handlersToRegister.add(messageHandler2);
+
+        BuildTagsViaBuildLogPlugin plugin = new BuildTagsViaBuildLogPlugin(EVENT_DISPATCHER, handlersToRegister);
 
         final RunningBuildStub build = new RunningBuildStub();
+        plugin.messageReceived(build, buildMessage(TEXT_MESSAGE, "##teamcity[messageName1 'value']"));
+        plugin.messageReceived(build, buildMessage(TEXT_MESSAGE, "sth else"));
+        plugin.messageReceived(build, buildMessage(TEXT_MESSAGE, "##teamcity[messageName2'value']"));
+        plugin.messageReceived(build, buildMessage(TEXT_MESSAGE, "##teamcity[messageName1]"));
+        plugin.messageReceived(build, buildMessage(TEXT_MESSAGE, "messageName1 'value2'"));
 
-        plugin.messageReceived(build, buildMessage("Text", "any message"));
-        plugin.messageReceived(build, buildMessage("Text", "##teamcity[addBuildTag 'cooltag']"));
-        plugin.messageReceived(build, buildMessage("Text", "##teamcity[anyMessageType value='i like icecream']"));
-        plugin.messageReceived(build, buildMessage("Text", "any message 2"));
-        plugin.messageReceived(build, buildMessage("Text", "##teamcity[addBuildTag     'two words'    ]"));
-        plugin.messageReceived(build, buildMessage("Text", "##teamcity"));
-        plugin.messageReceived(build, buildMessage("Text", "##teamcity[addBuildTag    ]"));
+        assertThat(messageHandler1.getRecordedMessages(), hasSize(2));
+        assertThat(messageHandler2.getRecordedMessages(), hasSize(1));
 
-        final List<String> tags = build.getTags();
-
-        assertThat(tags, Matchers.hasSize(2));
-        assertThat("Invalid tags: " + listToString(tags), tags, containsInAnyOrder("cooltag", "two words"));
-    }
-
-    private String listToString(List<String> tags) {
-        return Arrays.toString(tags.toArray());
+        assertThat(messageHandler1.getRecordedMessages(), contains("##teamcity[messageName1 'value']", "##teamcity[messageName1]"));
+        assertThat(messageHandler2.getRecordedMessages(), contains("##teamcity[messageName2'value']"));
     }
 
     private BuildMessage1 buildMessage(String typeId, Object value) {
